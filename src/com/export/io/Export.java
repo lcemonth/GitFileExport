@@ -10,30 +10,45 @@ import java.util.Set;
 
 public class Export {
 	Set<String> filePathSet = null;
+	String exportPath;
+	String gitPath;
 	
 	public Export() {
 		
 	}
 	
-	
 	/**
-	 * 
-	 * 
+	 * gitPath 專案位置
+	 * exportPath 要匯出的地點
 	 * */
-	public Export(Set<String> filePathSet) {
-		this.filePathSet = filePathSet;
+	public Export(String gitPath,String exportPath) {
+		this.gitPath = gitPath;
+		this.exportPath = exportPath;
 	}
-	
+
 	/**
 	 * 
-	 * @param String fileMkdir 匯出的位置
-	 * @param String[] fileStr 
-	 * 
 	 * */
-	public void copyDirectory(String fileMkdir,String[] fileStr) {
-		for (int i = 0; i < (fileStr.length-1); i++) {
+	public void copyFile(String filePath) throws IOException {
+		
+		if(filePath.indexOf("/") > -1) {
+			copyDirectory(filePath);
+		}
+		
+	    Path inputPath = new File(gitPath+"/"+filePath).toPath();
+	    File outputFile = new File(exportPath+"/"+filePath);
+	    
+		FileOutputStream fos = new FileOutputStream(outputFile);
+		Files.copy(inputPath, fos);
+		
+	}
+	public void copyDirectory(String filePath) {
+		String[] filePathSpt=filePath.split("/");
+		String fileMkdir = exportPath;
+		
+		for (int i = 0 ,length = (filePathSpt.length-1) ; i < length; i++) {
 			
-			fileMkdir+="/"+fileStr[i];
+			fileMkdir+="/"+filePathSpt[i];
 			
 			File file = new File(fileMkdir);
 			if(!file.isDirectory()) {
@@ -43,20 +58,4 @@ public class Export {
 			}
 		}
 	}
-	
-	public void copyFile(Path inputPath,File outputFile) throws IOException {
-//	    Path inputPath = new File(GITPATH+"/"+filePath).toPath();
-//	    
-//	    FileOutputStream fos=null;
-//		try {
-//			fos = new FileOutputStream(new File(EXPORT_PATH+"/"+filePath));
-		FileOutputStream fos = new FileOutputStream(outputFile);
-		Files.copy(inputPath, fos);
-//		} catch (IOException e) {
-//			// TODO Auto-generated catch block
-//			e.printStackTrace();
-//		}
-	}
-	
-	
 }

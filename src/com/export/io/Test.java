@@ -1,11 +1,18 @@
 package com.export.io;
 
+import java.awt.datatransfer.DataFlavor;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -64,25 +71,71 @@ public class Test {
 	
 	static String path = new File("..").getAbsolutePath();
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ParseException {
 		// TODO Auto-generated method stub
 
 		
-        Employee employee01 = new Employee("bryan",30000);
-        Employee employee02 = new Employee("joe",31000);
-        employee02.setSex("N");
-        Gson gson =  new Gson();
-        String jsonStr1 = gson.toJson(employee01);
-        String jsonStr2 = gson.toJson(employee01,Employee.class);
-        System.out.println("jsonStr1:"+jsonStr1);
-        System.out.println("jsonStr2:"+jsonStr2);
+//		String dateStr ="2020-03-01";
+//		
+//		DateTimeFormatter formatters = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+//		
+//		LocalDateTime date = LocalDateTime.parse(dateStr, formatters);
+//		
 		
 		
-        Employee employee05  = gson.fromJson(jsonStr1, Employee.class);
-        
-        System.out.println(employee05.getName());
-        System.out.println(employee05.getSalary());
-        
+		// 把時間轉換成指定的字串
+//		LocalDateTime dateTime = LocalDateTime.now();
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+//		String dateTimeText1 = dateTime.format(formatter);
+		// 從字串轉成日期
+
+		String dateTimeText1 = "2020-03-01 00:00:00";
+		String dateTimeText2 = "2020-03-08 00:00:00";
+		LocalDateTime checkDate = LocalDateTime.parse(dateTimeText1, formatter);
+//		LocalDateTime gitDate = LocalDateTime.parse(dateTimeText2, formatter);
+		
+
+//		System.out.println(parsedDate.getYear());	
+//		System.out.println(parsedDate.getMonthValue());	
+//		System.out.println(parsedDate.getDayOfMonth());
+		
+
+//		System.out.println(parsedDate1.getYear());	
+//		System.out.println(parsedDate1.getMonthValue());	
+//		System.out.println(parsedDate1.getDayOfMonth());
+//		
+		
+//		System.out.println(checkDate.getYear());
+//		System.out.println(checkDate.getMonthValue());
+//		System.out.println(checkDate.getDayOfMonth());
+		
+		LocalDateTime minusDate = checkDate.minusDays(1);
+		System.out.println(minusDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+		
+		
+//		System.out.println(checkDate.compareTo(gitDate));
+		
+		
+//		System.out.println(date.getYear());
+//		System.out.println(date.getMonth());
+//		System.out.println(date.get);
+		
+		
+//        Employee employee01 = new Employee("bryan",30000);
+//        Employee employee02 = new Employee("joe",31000);
+//        employee02.setSex("N");
+//        Gson gson =  new Gson();
+//        String jsonStr1 = gson.toJson(employee01);
+//        String jsonStr2 = gson.toJson(employee01,Employee.class);
+//        System.out.println("jsonStr1:"+jsonStr1);
+//        System.out.println("jsonStr2:"+jsonStr2);
+//		
+//		
+//        Employee employee05  = gson.fromJson(jsonStr1, Employee.class);
+//        
+//        System.out.println(employee05.getName());
+//        System.out.println(employee05.getSalary());
+//        
 		
 //		String gitPath = path + "\\" +projectName;
 //		File gitFile = new File(gitPath);
