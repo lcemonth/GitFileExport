@@ -1,252 +1,74 @@
-ExportFile.java
+import java.io.*;
+import java.nio.file.*;
+import java.util.*;
 
-```=java
+public class EntityGenerator {
 
+    public static void main(String[] args) throws IOException {
+        String filePath = System.getProperty("user.home") + "/Desktop/sqlName.txt";
+        List<String> lines = Files.readAllLines(Paths.get(filePath));
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import com.export.gitcmd.GitCmd;
-import com.export.io.Export;
-import com.export.vo.GitData;
-
-public class ExportFile {
-
-
-	static final String EXPORT_PATH ="C:\\Users\\USER\\Desktop\\David\\GitFile2";	//要匯出的地點
-	static final String EXPORT_DATE ="2021-03-29";	//匯出這日期之後的檔案
-//	static final String PROJECT_NAME ="lafcspapi";		//要匯出的專案
-	static final String PROJECT_NAME ="LAF";		//要匯出的專案
-//	static final String PROJECT_NAME ="lafcsp";		//要匯出的專案
-		
-	static final String PATH = new File("..").getAbsolutePath();
-	static final String GITPATH = PATH + "/" +PROJECT_NAME;
-
-	static final String[] notExportId = {
-			//"185a103","f285163","9a0d7b9","026d7b8","de6dd21","6780bc6"
-//			"3d25662"
-//			"772cccb"
-//			"c05a1c6"
-//			"1a23140",
-//			"9ea006d"
-			"8d029f6"
-			
-	};
-	
-	public static void main(String[] args) throws IOException {
-
-		GitCmd gitCmd = new GitCmd(new File(GITPATH));
-		
-		List<GitData> gitDataList = gitCmd.getCommitData(EXPORT_DATE);
-		List<String> updateFilePathList = gitCmd.getUpdateFile(gitDataList,notExportId);
-		
-		
-
-		deleteAll(new File(EXPORT_PATH));
-		init(new File(EXPORT_PATH));
-		
-		
-		Export export = new Export(GITPATH,EXPORT_PATH);
-		
-		for (String filePath : updateFilePathList) {
-			export.copyFile(filePath);
-		}
-
-		System.out.println("完成");
-
-	}
-
-	
-	public static void init(File f) {
-        if (f.mkdir()) {
-            System.out.println("建立成功");
-        } else {
-            System.out.println("建立失敗");
-        }
-	}
-	
-	 public static void deleteAll(File path) {
-	        if (!path.exists()) {
-	            return;
-	        }
-	        if (path.isFile()) {
-	            path.delete();
-	            return;
-	        }
-	        File[] files = path.listFiles();
-	        for (int i = 0; i < files.length; i++) {
-	            deleteAll(files[i]);
-	        }
-	        path.delete();
-	    }
-	
-}
-
-```
-
-
-ExportFile.java
-```=java
-package com.export.io;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
-
-import com.export.gitcmd.GitCmd;
-import com.export.vo.GitData;
-
-public class ExportFile {
-
-
-	static final String EXPORT_PATH ="C:\\Users\\USER\\Desktop\\David\\GitFile";	//要匯出的地點
-	static final String EXPORT_DATE ="2020-07-29";	//匯出這日期之後的檔案
-	static final String PROJECT_NAME ="LAF";		//要匯出的專案
-		
-	static final String PATH = new File("..").getAbsolutePath();
-	static final String GITPATH = PATH + "/" +PROJECT_NAME;
-	
-	static String[] notExportId = {
-		""
-	};
-	
-	public static void main(String[] args) throws IOException {
-		
-		GitCmd gitCmd = new GitCmd(new File(GITPATH));
-		
-		List<GitData> gitDataList = gitCmd.getCommitData(EXPORT_DATE);
-		List<String> updateFilePathList = gitCmd.getUpdateFile(gitDataList,notExportId);
-		
-		Export export = new Export(GITPATH,EXPORT_PATH);
-		
-		for (String filePath : updateFilePathList) {
-			export.copyFile(filePath);
-		}
-
-		System.out.println("完成");
-
-	}
-	
-}
-```
-
-
-
-GitCmd.java
-
-```=java
-package com.export.gitcmd;
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.sql.rowset.serial.SerialArray;
-
-import com.export.vo.GitData;
-import com.google.gson.Gson;
-
-public class GitCmd<E> {
-	File gitFile = null;
-	
-	public GitCmd(){
-		
-	}
-	
-	public GitCmd(File file){
-		gitFile = file;
-	}
-	
-	
-	/**
-	 * @param String date 日期
-	 * @throws IOException 
-	 * */
-	public List<GitData> getCommitData(String date) throws IOException {
-		String minusDays = minusDays(date);
-		List<String> gitJsonDataList = gitCmdExec("cmd /k git log --after=\""+minusDays+"\" --pretty={\"commitID\":'%h',\"commitDate\":'%ad',\"commitTitle\":'%s'} --date=short ");
-		
-        return gitJsonDataList.stream()
-				.map(jsonStr -> new Gson().fromJson(jsonStr, GitData.class))
-				.filter(gitData-> checkCommitDate(gitData.getCommitDate(), date) <=0 )
-				.collect(Collectors.toList());
-	}
-	
-	public List<String> getUpdateFile(List<GitData> gitDataList,String[] notExportId) throws IOException{
-
-		List<String> updateFileList = new ArrayList<String>();
-
-		for (GitData gitData : gitDataList) {
-			boolean	notExport = true;
-			for (int i = 0; i < notExportId.length; i++) {
-				if(gitData.getCommitID().equals(notExportId[i])) {
-					notExport= false;
-				} 
-			}
-			
-			if(notExport) {
-				updateFileList.addAll(gitCmdExec("cmd /k git diff-tree --no-commit-id --name-only -r "+gitData.getCommitID()+" "));
-			}
-		}
-
-		return updateFileList;
-	}
-	
-	/**
-	 * 收尋不到當天commit 紀錄的問題，故減少一天 ，其他天用程式排除
-	 * 
-	 * */
-	private String minusDays(String date) {
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		LocalDateTime minusDate = LocalDateTime.parse(date+" 00:00:00", formatter);
-		
-		return minusDate.minusDays(1)
-				.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-	}
-	
-	private int checkCommitDate(String gitDate,String checkDate){
-		
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-		LocalDateTime gitDateLDT = LocalDateTime.parse(gitDate+" 00:00:00", formatter);
-		LocalDateTime checkDateLDT = LocalDateTime.parse(checkDate+" 00:00:00", formatter);
-
-		return checkDateLDT.compareTo(gitDateLDT);
-	}
-	
-	
-	private List<String> gitCmdExec(String cmdExecStr) throws IOException {
-		List<String> cmdExecResultList = new ArrayList<String>();
-		
-		Process pro = Runtime.getRuntime().exec(cmdExecStr,null,gitFile);
-		
-		String line = "";
-		BufferedReader br = new BufferedReader(new InputStreamReader( pro.getInputStream(),"UTF8"));
-		
-		line = br.readLine();
-		while (line.length() != 0) {
-        	cmdExecResultList.add(line);
-            line = br.readLine();
+        if (lines.size() < 2) {
+            throw new IllegalArgumentException("檔案格式不正確，請確認至少有資料表名稱與欄位資料");
         }
 
-		System.out.println("cmdExecStr = "+cmdExecStr);
-		System.out.println("cmdExecResultList = "+cmdExecResultList.toString());
+        String tableName = lines.get(0).trim();
+        String className = toCamelCase(tableName, true);
 
-		return cmdExecResultList;
-	}
-	
-	
+        StringBuilder sb = new StringBuilder();
+        sb.append("import jakarta.persistence.*;\n");
+        sb.append("import java.time.*;\n\n");
+        sb.append("@Entity\n");
+        sb.append("@Table(name = \"" + tableName + "\")\n");
+        sb.append("public class " + className + " {\n\n");
+
+        for (int i = 1; i < lines.size(); i++) {
+            String line = lines.get(i).trim();
+            if (line.isEmpty()) continue;
+
+            String[] parts = line.split("\\s+");
+            if (parts.length < 2) continue;
+
+            String sqlType = parts[0];
+            String columnName = parts[1];
+
+            String javaType = mapSqlTypeToJava(sqlType);
+            String fieldName = toCamelCase(columnName, false);
+
+            sb.append("    @Column(name = \"" + columnName + "\")\n");
+            sb.append("    private " + javaType + " " + fieldName + ";\n\n");
+        }
+
+        sb.append("}\n");
+
+        // 輸出檔案
+        String outputPath = System.getProperty("user.home") + "/Desktop/" + className + ".java";
+        Files.write(Paths.get(outputPath), sb.toString().getBytes());
+
+        System.out.println("Entity 已產生：" + outputPath);
+    }
+
+    private static String mapSqlTypeToJava(String sqlType) {
+        sqlType = sqlType.toLowerCase();
+        if (sqlType.startsWith("varchar")) return "String";
+        if (sqlType.equals("data")) return "LocalDate";
+        if (sqlType.equals("timestamp")) return "LocalDateTime";
+        return "String"; // 預設
+    }
+
+    private static String toCamelCase(String input, boolean capitalizeFirst) {
+        input = input.toLowerCase();
+        String[] parts = input.split("_");
+        StringBuilder sb = new StringBuilder();
+
+        for (int i = 0; i < parts.length; i++) {
+            String part = parts[i];
+            if (i == 0 && !capitalizeFirst) {
+                sb.append(part);
+            } else {
+                sb.append(part.substring(0, 1).toUpperCase()).append(part.substring(1));
+            }
+        }
+        return sb.toString();
+    }
 }
-
-```
-
